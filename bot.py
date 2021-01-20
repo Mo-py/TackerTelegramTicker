@@ -10,7 +10,7 @@ from secrets import TOKEN, chat_id
 locale.setlocale(locale.LC_ALL, 'de_DE')
 
 #configure Telegram bot
-
+#TOKEN and Chat_id are saved in secrets.py
 tb = telebot.TeleBot(TOKEN, parse_mode="HTML")
 
 
