@@ -10,7 +10,7 @@ from secrets import TOKEN, chat_id
 locale.setlocale(locale.LC_ALL, 'de_DE')
 
 #configure Telegram bot
-#TOKEN and Chat_id are saved in secrets.py
+
 tb = telebot.TeleBot(TOKEN, parse_mode="HTML")
 
 
@@ -64,29 +64,42 @@ def event_string (Datum_f, title, subtitle, link):
 """
     return event
 
-#configuring RSS feed parser
-Feed = feedparser.parse('http://tacker.fr/index.php/taxonomy/term/53/feed')
+#get the "id" of the event (last part of the link)
+def get_event_id (pointer):
+    link = pointer.link
+    event_id = link.replace("http://tacker.fr/node/","")
+    return event_id
+
+
+#seting Feed URLs
+feed_urls = ['http://tacker.fr/index.php/taxonomy/term/53/feed', 'https://tacker.fr/taxonomy/term/52/feed', 'https://tacker.fr/taxonomy/term/65']
 
 #List of all events and aditional message
-events = ["<b><u>Demo(s) Morgen:</u></b>","\n"]
-
+events = ["<b><u>Demo(s)/Aktion(en)/Kundgebung(en) Morgen:</u></b>","\n"]
+event_ids = []
 #loop through all events from the feed
-for pointer in Feed.entries:
-    current, title, subtitle, Datum_f, link = get_infos(pointer) 
+for feed_url in feed_urls:
+    Feed = feedparser.parse(feed_url)
+    for pointer in Feed.entries:
+        current, title, subtitle, Datum_f, link = get_infos(pointer) 
+        event_id = get_event_id(pointer)
+        if event_id not in event_ids:
+            
+            #events on the next day
+            if current.date == date.today() + timedelta(days=1):
+                pass
+            else:
+                events.append(event_string(Datum_f, title, subtitle, link))
+                event_ids.append(event_id)
 
-    #events on the next day
-    if current.date == date.today() + timedelta(days=1):
-        pass
-    else:
-        events.append(event_string(Datum_f, title, subtitle, link))
-
-    #Events in the next week on Sunday
-    if current.weekday == 6:
-        events = ["<b><u>Demo(s) diese Woche:</u></b>","\n"]
-        if current.date <= date.today() + timedelta(days=7) and current < datetime.now():
-            events.append(event_string(Datum_f, title, subtitle, link))
-        else:
-            events.append("Keine Demos/Aktionen diese Woche")
+            #Events in the next week (on Sunday)
+            if current.weekday == 6:
+                events = ["<b><u>Demo(s) diese Woche:</u></b>","\n"]
+                if current.date <= date.today() + timedelta(days=7) and current < datetime.now():
+                    events.append(event_string(Datum_f, title, subtitle, link))
+                    event_ids.append(event_id)
+                else:
+                    events.append("Keine Demos/Aktionen/Kundgebungen diese Woche :(")
 
 #Telegram Message if there are Events           
 if len(events) >= 3:
@@ -94,5 +107,5 @@ if len(events) >= 3:
     print(text)
     tb.send_message(chat_id, text)
 else:
-    print("Keine Demos!")
+    print("Keine events!")
         
