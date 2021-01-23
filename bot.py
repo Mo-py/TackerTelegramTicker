@@ -87,8 +87,6 @@ for feed_url in feed_urls:
             
             #events on the next day
             if current.date == date.today() + timedelta(days=1):
-                pass
-            else:
                 events.append(event_string(Datum_f, title, subtitle, link))
                 event_ids.append(event_id)
 
